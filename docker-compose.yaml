@@ -1,0 +1,17 @@
+version: '3.4'
+services:
+  webapi:
+    image: sarw-rp:latest
+    ports:
+      - "5295:5295"
+      - "7001:7001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5295;https://+:7001
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/cert/dev-cert.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=crypticpassword
+    volumes:
+      - ${HOME}/.aspnet/https:/app/cert
+
+
+      

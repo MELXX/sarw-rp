@@ -4,11 +4,12 @@ using System.Threading.Tasks;
 
 [ApiController]
 [Route("[controller]")]
-public class ProxyController : ControllerBase
+public class Proxy2Controller : ControllerBase
 {
     private readonly HttpClient _httpClient;
-    private readonly string _targetBaseUrl;
+    private  string _targetBaseUrl;
     private readonly ILogger<ProxyController> _logger;
+    IConfiguration configuration;
 
     private static readonly HashSet<string> CorsHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -20,11 +21,12 @@ public class ProxyController : ControllerBase
         "Access-Control-Expose-Headers"
     };
 
-    public ProxyController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<ProxyController> logger)
+    public Proxy2Controller(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<ProxyController> logger)
     {
         _httpClient = httpClientFactory.CreateClient();
-        _targetBaseUrl = configuration["TargetBaseUrl"] ?? throw new ArgumentNullException("TargetBaseUrl configuration is missing");
+        _targetBaseUrl = configuration["TargetBaseUrl2"] ?? throw new ArgumentNullException("TargetBaseUrl configuration is missing");
         _logger = logger;
+        this.configuration = configuration;
     }
 
     [HttpGet("{**path}")]
@@ -32,11 +34,21 @@ public class ProxyController : ControllerBase
     [HttpPut("{**path}")]
     [HttpDelete("{**path}")]
     [HttpPatch("{**path}")]
-    public async Task<IActionResult> ForwardRequest(string path)
+    public async Task<IActionResult> ForwardRequest(string path,[FromQuery] int? urltype)
     {
         try
         {
-            var targetUrl = $"{_targetBaseUrl.TrimEnd('/')}/{path}{HttpContext.Request.QueryString.Value}";
+            var targetUrl = "";
+            if (urltype == null || urltype != 1 )
+            {
+
+                targetUrl = $"{_targetBaseUrl.TrimEnd('/')}/{path}{HttpContext.Request.QueryString.Value}";
+            }
+            else
+            {
+                _targetBaseUrl = configuration["TargetBaseUrl3"] ?? throw new ArgumentNullException("TargetBaseUrl configuration is missing");
+                targetUrl = $"{_targetBaseUrl.TrimEnd('/')}/{path}".Replace("/v1","");
+            }
 
             // Create the request message
             var requestMessage = new HttpRequestMessage(new HttpMethod(Request.Method), targetUrl);
@@ -52,7 +64,7 @@ public class ProxyController : ControllerBase
             }
 
             // Copy request body for POST/PUT/PATCH
-            if (Request.Body != null && (Request.Method == "POST" || Request.Method == "PUT" || Request.Method == "PATCH" || Request.Method == "DELETE"))
+            if (Request.Body != null && (Request.Method == "POST" || Request.Method == "PUT" || Request.Method == "PATCH"))
             {
                 var bodyContent = await new StreamReader(Request.Body).ReadToEndAsync();
                 requestMessage.Content = new StringContent(bodyContent, System.Text.Encoding.UTF8, Request.ContentType);
