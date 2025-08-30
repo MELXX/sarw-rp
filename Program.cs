@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using sarw_rp.Models;
+
 namespace sarw_rp
 {
     public class Program
@@ -10,7 +13,8 @@ namespace sarw_rp
 
             builder.Services.AddControllers();
             builder.Services.AddHttpClient();
-
+            var connectionString = Environment.GetEnvironmentVariable("sarwdb");
+            builder.Services.AddDbContext<SarwrpdbContext>(options =>options.UseSqlServer(connectionString));
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

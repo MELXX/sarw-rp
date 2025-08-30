@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using sarw_rp.DTOs;
+using sarw_rp.Models;
+using sarw_rp.Models.DbModels;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -13,16 +16,28 @@ namespace sarw_rp.Controllers
     public class BannersController : ControllerBase
     {
         private readonly HttpClient http = new HttpClient();
+        private SarwrpdbContext _sarwrpdbContext { get; }
 
-        public BannersController()
+        public BannersController(SarwrpdbContext sarwrpdbContext)
         {
-                
+            _sarwrpdbContext = sarwrpdbContext;
         }
+
 
         [HttpPost("CreateArticle")]
         public async Task<string?> CreateArticle([FromForm] IFormFile article_image, [FromForm] string json_payload)
         {
-            //var art = JsonSerializer.Deserialize<Article>(json_payload);
+            var art = JsonSerializer.Deserialize<ArticleDTO>(json_payload);
+            var article = new Article()
+            {
+                CreatedDate = DateTime.Now,
+                UpdatedDate = DateTime.Now,
+                Title = art.Title,
+                Url = art.Url,
+                Summary = art.Summary
+            };
+            await _sarwrpdbContext.AddAsync<Article>(article);
+            await _sarwrpdbContext.SaveChangesAsync();
             return await SendMultipartAsync(article_image, json_payload, @"incident-reports/articles/create","article");
         }
 
