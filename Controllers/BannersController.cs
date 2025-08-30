@@ -23,13 +23,20 @@ namespace sarw_rp.Controllers
         public async Task<string?> CreateArticle([FromForm] IFormFile article_image, [FromForm] string json_payload)
         {
             //var art = JsonSerializer.Deserialize<Article>(json_payload);
-            return await SendMultipartAsync(article_image,json_payload);
+            return await SendMultipartAsync(article_image, json_payload, @"incident-reports/articles/create","article");
+        }
+
+        [HttpPost("CreateBanner")]
+        public async Task<string?> CreateBanner([FromForm] IFormFile banner_image, [FromForm] string json_payload)
+        {
+            //var art = JsonSerializer.Deserialize<Article>(json_payload);
+            return await SendMultipartAsync(banner_image, json_payload, @"incident-reports/banners/create","banner");
         }
 
 
-        public  async Task<string?> SendMultipartAsync(IFormFile article_image, string json_payload)
+        public  async Task<string?> SendMultipartAsync(IFormFile article_image, string json_payload,string resourceUri,string imageType)
         {
-            var url = "https://api-dev.sarwatch.co.za/api/v1/incident-reports/articles/create"; // replace with real endpoint
+            var url = "https://api-dev.sarwatch.co.za/api/v1/"+@resourceUri; // replace with real endpoint
             await using var stream = article_image.OpenReadStream();
             var fileContent = new StreamContent(stream);
             // Optional: auth header
@@ -45,7 +52,7 @@ namespace sarw_rp.Controllers
             // 2) Add simple text fields
             var jsonContent = new StringContent(@json_payload, Encoding.UTF8, "application/json");
             form.Add(jsonContent, "json_payload");
-            form.Add(fileContent, "article_image", article_image.FileName);
+            form.Add(fileContent, imageType+"_image", article_image.FileName);
 
             // Send request
             using var request = new HttpRequestMessage(HttpMethod.Post, url)
@@ -62,15 +69,5 @@ namespace sarw_rp.Controllers
             }
             return responseBody;
         }
-    }
-
-    public class Article
-    {
-        [JsonPropertyName("title")]
-        public string Title { get; set; }
-        [JsonPropertyName("content")]
-        public string Content { get; set; }
-        [JsonPropertyName("article_url")]
-        public string ArticleUrl { get; set; }
     }
 }
