@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using sarw_rp.DTOs;
 using sarw_rp.Models;
 using sarw_rp.Models.DbModels;
+using sarw_rp.Utilities;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
 namespace sarw_rp.Controllers
 {
     [Route("api/[controller]")]
@@ -18,14 +18,13 @@ namespace sarw_rp.Controllers
         private readonly HttpClient http = new HttpClient();
         private SarwrpdbContext _sarwrpdbContext { get; }
 
-        public BannersController(SarwrpdbContext sarwrpdbContext)
-        {
-            _sarwrpdbContext = sarwrpdbContext;
-        }
-
+        //public BannersController(SarwrpdbContext sarwrpdbContext)
+        //{
+        //    _sarwrpdbContext = sarwrpdbContext;
+        //}
 
         [HttpPost("CreateArticle")]
-        public async Task<string?> CreateArticle([FromForm] IFormFile article_image, [FromForm] string json_payload)
+        public async Task<string?> CreateArticle(IFormFile article_image, [FromForm] string json_payload)
         {
             var art = JsonSerializer.Deserialize<ArticleDTO>(json_payload);
             var article = new Article()
@@ -36,23 +35,32 @@ namespace sarw_rp.Controllers
                 Url = art.Url,
                 Summary = art.Summary
             };
-            await _sarwrpdbContext.AddAsync<Article>(article);
-            await _sarwrpdbContext.SaveChangesAsync();
+
+            //try
+            //{
+            //   await _sarwrpdbContext.AddAsync<Article>(article);
+            //   await _sarwrpdbContext.SaveChangesAsync();
+            //}
+            //catch (Exception)
+            //{
+
+            //}
+
             return await SendMultipartAsync(article_image, json_payload, @"incident-reports/articles/create","article");
         }
 
         [HttpPost("CreateBanner")]
-        public async Task<string?> CreateBanner([FromForm] IFormFile banner_image, [FromForm] string json_payload)
+        public async Task<string?> CreateBanner(IFormFile banner_image, [FromForm] string json_payload)
         {
             //var art = JsonSerializer.Deserialize<Article>(json_payload);
             return await SendMultipartAsync(banner_image, json_payload, @"incident-reports/banners/create","banner");
         }
 
-
-        public  async Task<string?> SendMultipartAsync(IFormFile article_image, string json_payload,string resourceUri,string imageType)
+        private async Task<string?> SendMultipartAsync(IFormFile article_image, string json_payload,string resourceUri,string imageType)
         {
             var url = "https://api-dev.sarwatch.co.za/api/v1/"+@resourceUri; // replace with real endpoint
-            await using var stream = article_image.OpenReadStream();
+            var compressedImage = await Utilities.Utilities.DefaultJpegCompressionAsync(article_image);
+            await using var stream = new MemoryStream(compressedImage);
             var fileContent = new StreamContent(stream);
             // Optional: auth header
 

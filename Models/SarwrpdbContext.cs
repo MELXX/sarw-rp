@@ -9,6 +9,7 @@ public partial class SarwrpdbContext : DbContext
 {
 
     public DbSet<Article> Articles { get; set; }
+    public DbSet<Banner> Banners { get; set; }
     public SarwrpdbContext()
     {
     }

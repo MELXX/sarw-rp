@@ -17,4 +17,14 @@ namespace sarw_rp.DTOs
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
     }
+
+    public class ArticleCreateDto
+    {
+        //[FromForm] IFormFile article_image, [FromForm] string json_payload
+        [JsonPropertyName("json_payload")]
+        public string payload { get; set; }
+        [JsonPropertyName("content")]
+        public IFormFile article_image { get; set; }
+    }
+
 }
